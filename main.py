@@ -36,28 +36,22 @@ def draw(canvas):
     #     canvas.refresh()
     #     time.sleep(0.3)
     row, column  = 5, 20
-    coroutine = blink(canvas, row, column)
+    # coroutine = blink(canvas, row, column)
+    coroutines = [
+        blink(canvas, row, counter)
+        for counter in range(20, 30, 2)
+    ]
+    x = 1
+    
 
-    coroutine.send(None)
-    canvas.refresh()
-    time.sleep(2)
-
-    coroutine.send(None)
-    canvas.refresh()
-    time.sleep(0.3)
-
-    coroutine.send(None)
-    canvas.refresh()
-    time.sleep(0.5)
-
-    coroutine.send(None)
-    canvas.refresh()
-    time.sleep(0.3)
-
-    time.sleep(1)
+    while True:
+        for coroutine in coroutines:
+            coroutine.send(None)
+            canvas.refresh()
+            
+        time.sleep(1)
 
 
-  
 if __name__ == '__main__':
     curses.update_lines_cols()
     curses.wrapper(draw)
