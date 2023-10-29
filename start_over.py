@@ -32,7 +32,19 @@ def draw(canvas):
         for my_coroutine in coroutines:
             my_coroutine.send(None)
             canvas.refresh()
-        time.sleep(1)
+        time.sleep(2)
+        for my_coroutine in coroutines:
+            my_coroutine.send(None)
+            canvas.refresh()
+        time.sleep(0.3)
+        for my_coroutine in coroutines:
+            my_coroutine.send(None)
+            canvas.refresh()
+        time.sleep(0.5)
+        for my_coroutine in coroutines:
+            my_coroutine.send(None)
+            canvas.refresh()
+        time.sleep(0.3)
 
   
 if __name__ == '__main__':
