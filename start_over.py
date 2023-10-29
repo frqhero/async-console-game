@@ -23,22 +23,16 @@ def draw(canvas):
     curses.curs_set(False)
     canvas.border()
 
+    coroutines = [
+        blink(canvas, row, counter)
+        for counter in range(20, 30, 2)
+    ]
+
     while True:
-        canvas.addstr(row, column, '*', curses.A_DIM)
-        canvas.refresh()
-        time.sleep(2)
-
-        canvas.addstr(row, column, '*')
-        canvas.refresh()
-        time.sleep(0.3)
-
-        canvas.addstr(row, column, '*', curses.A_BOLD)
-        canvas.refresh()
-        time.sleep(0.5)
-
-        canvas.addstr(row, column, '*')
-        canvas.refresh()
-        time.sleep(0.3)
+        for my_coroutine in coroutines:
+            my_coroutine.send(None)
+            canvas.refresh()
+        time.sleep(1)
 
   
 if __name__ == '__main__':
