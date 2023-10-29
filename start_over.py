@@ -1,4 +1,5 @@
 import asyncio
+from random import choice, randint
 import time
 import curses
 
@@ -23,9 +24,18 @@ def draw(canvas):
     curses.curs_set(False)
     canvas.border()
 
+    canvas_height, canvas_width = canvas.getmaxyx()
+    print(canvas_height, canvas_width)
+    symbols = '+*.:'
+
     coroutines = [
-        blink(canvas, row, counter)
-        for counter in range(20, 30, 2)
+        blink(
+            canvas,
+            randint(1, canvas_height - 2),
+            randint(1, canvas_width - 2),
+            choice(symbols),
+        )
+        for _ in range(100)
     ]
 
     while True:
@@ -46,7 +56,7 @@ def draw(canvas):
             canvas.refresh()
         time.sleep(0.3)
 
-  
+
 if __name__ == '__main__':
     curses.update_lines_cols()
     curses.wrapper(draw)
