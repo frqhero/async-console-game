@@ -158,7 +158,7 @@ async def animate_spaceship(canvas, start_row, start_column, frames):
         current_frame = next(frames_gen)
         number_of_rows, number_of_columns = get_frame_size(current_frame)
 
-        vertical, horizone, _ = read_controls(canvas)
+        vertical, horizon, _ = read_controls(canvas)
 
         border_space = 1
 
@@ -168,15 +168,15 @@ async def animate_spaceship(canvas, start_row, start_column, frames):
         reached_left = column <= 1
 
         if (vertical == 1 and not reached_bottom or
-            vertical == -1 and not reached_top):
+                vertical == -1 and not reached_top):
             row += vertical
 
-        if (horizone == 1 and not reached_right or
-            horizone == -1 and not reached_left):
-            column += horizone
+        if (horizon == 1 and not reached_right or
+                horizon == -1 and not reached_left):
+            column += horizon
 
         draw_frame(canvas, row, column, current_frame)
-        await go_to_sleep(0.2)
+        await go_to_sleep(0.1)
         draw_frame(canvas, row, column, current_frame, negative=True)
 
 
@@ -209,7 +209,12 @@ def draw(canvas):
         'frames/rocket_frame_2.txt'
     )
 
-    rocket_frames = (rocket_frame_1, rocket_frame_2)
+    rocket_frames = (
+        rocket_frame_1,
+        rocket_frame_1,
+        rocket_frame_2,
+        rocket_frame_2
+    )
 
     rocket_coro = animate_spaceship(canvas, 1, 150, rocket_frames)
     coroutines.append(rocket_coro)
