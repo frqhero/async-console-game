@@ -150,6 +150,19 @@ async def animate_spaceship(canvas, start_row, start_column, frames):
         draw_frame(canvas, row, column, current_frame, negative=True)
 
 
+def get_frames():
+    return {
+        'duck': load_frame_from_file('frames/duck.txt'),
+        'hubble': load_frame_from_file('frames/hubble.txt'),
+        'lamp': load_frame_from_file('frames/lamp.txt'),
+        's': load_frame_from_file('frames/s.txt'),
+        'trash_large': load_frame_from_file('frames/trash_large.txt'),
+        'trash_xl': load_frame_from_file('frames/trash_xl.txt'),
+        'rocket_frame_1': load_frame_from_file('frames/rocket_frame_1.txt'),
+        'rocket_frame_2': load_frame_from_file('frames/rocket_frame_2.txt'),
+    }
+
+
 def draw(canvas):
     curses.curs_set(False)
     canvas.border()
@@ -172,18 +185,14 @@ def draw(canvas):
     fire_coro = fire(canvas, height - 2, width / 2)
     coroutines.append(fire_coro)
 
-    rocket_frame_1 = load_frame_from_file(
-        'frames/rocket_frame_1.txt'
-    )
-    rocket_frame_2 = load_frame_from_file(
-        'frames/rocket_frame_2.txt'
-    )
+    
+    frames = get_frames()
 
     rocket_frames = (
-        rocket_frame_1,
-        rocket_frame_1,
-        rocket_frame_2,
-        rocket_frame_2
+        frames['rocket_frame_1'],
+        frames['rocket_frame_1'],
+        frames['rocket_frame_2'],
+        frames['rocket_frame_2'],
     )
 
     rocket_coro = animate_spaceship(canvas, 1, 150, rocket_frames)
