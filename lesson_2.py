@@ -6,6 +6,7 @@ import time
 import curses
 
 from curses_tools import draw_frame
+from space_garbage import fly_garbage
 
 
 SPACE_KEY_CODE = 32
@@ -163,6 +164,14 @@ def get_frames():
     }
 
 
+def get_garbage_coroutines(canvas, frames):
+    return [
+        fly_garbage(canvas, 5, frames['s']),
+        fly_garbage(canvas, 15, frames['trash_large']),
+        fly_garbage(canvas, 35, frames['trash_xl']),
+    ]
+
+
 def draw(canvas):
     curses.curs_set(False)
     canvas.border()
@@ -197,6 +206,9 @@ def draw(canvas):
 
     rocket_coro = animate_spaceship(canvas, 1, 150, rocket_frames)
     coroutines.append(rocket_coro)
+
+    garbage_coroutines = get_garbage_coroutines(canvas, frames)
+    coroutines = coroutines + garbage_coroutines
 
     while True:
         for coroutine in coroutines.copy():
