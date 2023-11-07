@@ -172,6 +172,19 @@ def get_garbage_coroutines(canvas, frames):
     ]
 
 
+async def fill_orbit_with_garbage(canvas, frames, coroutines):
+    _, width = canvas.getmaxyx()
+    garbage_frames = [
+        frames['s'],
+        frames['trash_large'],
+        frames['trash_xl'],
+    ]
+    while True:
+        new_coroutine = fly_garbage(canvas, randint(0, width), choice(garbage_frames))
+        coroutines.append(new_coroutine)
+        await go_to_sleep(1)
+
+
 def draw(canvas):
     curses.curs_set(False)
     canvas.border()
@@ -209,6 +222,9 @@ def draw(canvas):
 
     garbage_coroutines = get_garbage_coroutines(canvas, frames)
     coroutines = coroutines + garbage_coroutines
+
+    filling_garbage_coroutine = fill_orbit_with_garbage(canvas, frames, coroutines)
+    coroutines.append(filling_garbage_coroutine)
 
     while True:
         for coroutine in coroutines.copy():
