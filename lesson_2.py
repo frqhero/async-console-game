@@ -6,6 +6,7 @@ import time
 import curses
 
 from curses_tools import draw_frame
+from physics import update_speed
 from space_garbage import fly_garbage
 
 
@@ -120,16 +121,18 @@ def get_frame_size(text):
     return rows, columns
 
 
-async def animate_spaceship(canvas, start_row, start_column, frames):
+async def animate_spaceship(canvas, start_row, start_column, frames, coroutines):
     frames_gen = cycle(frames)
     row, column = start_row, start_column
     max_height, max_width = canvas.getmaxyx()
+    row_speed = column_speed = 0
 
     while True:
         current_frame = next(frames_gen)
         number_of_rows, number_of_columns = get_frame_size(current_frame)
 
-        vertical, horizon, _ = read_controls(canvas)
+        vertical, horizon, space_pressed = read_controls(canvas)
+        row_speed, column_speed = update_speed(row_speed, column_speed, vertical, horizon)
 
         border_space = 1
 
@@ -140,11 +143,15 @@ async def animate_spaceship(canvas, start_row, start_column, frames):
 
         if (vertical == 1 and not reached_bottom or
                 vertical == -1 and not reached_top):
-            row += vertical
+            row += vertical + row_speed
 
         if (horizon == 1 and not reached_right or
                 horizon == -1 and not reached_left):
-            column += horizon
+            column += horizon + column_speed
+
+        if space_pressed:
+            fire_coro = fire(canvas, row, column + 1)
+            coroutines.append(fire_coro)
 
         draw_frame(canvas, row, column, current_frame)
         await go_to_sleep(0.1)
@@ -201,13 +208,9 @@ def draw(canvas):
             choice(symbols),
             randint(0, 3)
         )
-        for _ in range(50)
+        for _ in range(1)
     ]
 
-    fire_coro = fire(canvas, height - 2, width / 2)
-    coroutines.append(fire_coro)
-
-    
     frames = get_frames()
 
     rocket_frames = (
@@ -217,11 +220,11 @@ def draw(canvas):
         frames['rocket_frame_2'],
     )
 
-    rocket_coro = animate_spaceship(canvas, 1, 150, rocket_frames)
+    rocket_coro = animate_spaceship(canvas, 1, 150, rocket_frames, coroutines)
     coroutines.append(rocket_coro)
 
     garbage_coroutines = get_garbage_coroutines(canvas, frames)
-    coroutines = coroutines + garbage_coroutines
+    coroutines += coroutines + garbage_coroutines
 
     filling_garbage_coroutine = fill_orbit_with_garbage(canvas, frames, coroutines)
     coroutines.append(filling_garbage_coroutine)
