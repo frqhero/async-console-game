@@ -6,6 +6,7 @@ import time
 import curses
 
 from curses_tools import draw_frame
+from obstacles import Obstacle, show_obstacles, obstacles
 from physics import update_speed
 from space_garbage import fly_garbage
 
@@ -192,6 +193,23 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
         await go_to_sleep(1)
 
 
+def get_obstacle_coroutine(canvas):
+    obstacles = [
+        Obstacle(10, 10),  # первое препятствие
+        Obstacle(10, 12, uid='второе препятствие с названием'),
+        Obstacle(15, 15, uid='третье большое препятствие'),
+    ]
+    coroutine = show_obstacles(canvas, obstacles)
+
+    return coroutine
+
+
+async def print_info(canvas):
+    while True:
+        canvas.addstr(1, 1, '{}'.format(len(obstacles.keys())))
+        await go_to_sleep(0.1)
+
+
 def draw(canvas):
     curses.curs_set(False)
     canvas.border()
@@ -228,6 +246,11 @@ def draw(canvas):
 
     filling_garbage_coroutine = fill_orbit_with_garbage(canvas, frames, coroutines)
     coroutines.append(filling_garbage_coroutine)
+
+    obstacle = get_obstacle_coroutine(canvas)
+    coroutines.append(obstacle)
+
+    coroutines.append(print_info(canvas))
 
     while True:
         for coroutine in coroutines.copy():
