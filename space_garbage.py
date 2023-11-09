@@ -20,7 +20,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     row = 0
 
     obstacle = Obstacle(row, column, frame_rows, frame_columns, uid=uid)
-    obstacles[uid] = obstacle
+    obstacles.append(obstacle)
 
     while row < rows_number:
         draw_frame(canvas, row, column, obstacle.get_bounding_box_frame())
@@ -29,4 +29,4 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         draw_frame(canvas, row, column, obstacle.get_bounding_box_frame(), negative=True)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
-    obstacles.pop(uid)
+    obstacles.remove(obstacle)

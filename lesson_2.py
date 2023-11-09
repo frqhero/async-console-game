@@ -206,7 +206,7 @@ def get_obstacle_coroutine(canvas):
 
 async def print_info(canvas):
     while True:
-        canvas.addstr(1, 1, '{}'.format(len(obstacles.keys())))
+        canvas.addstr(1, 1, '{}'.format(len(obstacles)))
         await go_to_sleep(0.1)
 
 
@@ -251,6 +251,8 @@ def draw(canvas):
     coroutines.append(obstacle)
 
     coroutines.append(print_info(canvas))
+
+    coroutines.append(show_obstacles(canvas, obstacles))
 
     while True:
         for coroutine in coroutines.copy():
