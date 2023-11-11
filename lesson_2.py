@@ -6,7 +6,7 @@ from itertools import cycle
 from random import choice, randint
 
 from curses_tools import draw_frame
-from obstacles import obstacles, show_obstacles
+from obstacles import obstacles, show_obstacles, obstacles_in_last_collisions
 from physics import update_speed
 from space_garbage import fly_garbage
 
@@ -102,6 +102,11 @@ async def fire(
     curses.beep()
 
     while 0 < row < max_row and 0 < column < max_column:
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column):
+                obstacles_in_last_collisions.append(obstacle)
+                return
+
         canvas.addstr(round(row), round(column), symbol)
         await asyncio.sleep(0)
         canvas.addstr(round(row), round(column), ' ')
@@ -211,6 +216,7 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
 async def print_info(canvas):
     while True:
         canvas.addstr(1, 1, '{}'.format(len(obstacles)))
+        canvas.addstr(1, 3, '{}'.format(len(obstacles_in_last_collisions)))
         await go_to_sleep(0.1)
 
 
