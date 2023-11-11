@@ -1,15 +1,14 @@
 import asyncio
-import logging
-from random import choice, randint
-from itertools import cycle
-import time
 import curses
+import logging
+import time
+from itertools import cycle
+from random import choice, randint
 
 from curses_tools import draw_frame
-from obstacles import Obstacle, show_obstacles, obstacles
+from obstacles import obstacles, show_obstacles
 from physics import update_speed
 from space_garbage import fly_garbage
-
 
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
@@ -20,7 +19,7 @@ DOWN_KEY_CODE = 258
 
 def read_controls(canvas):
     """Read keys pressed and returns tuple witl controls state."""
-    
+
     rows_direction = columns_direction = 0
     space_pressed = False
 
@@ -45,7 +44,7 @@ def read_controls(canvas):
 
         if pressed_key_code == SPACE_KEY_CODE:
             space_pressed = True
-    
+
     return rows_direction, columns_direction, space_pressed
 
 
@@ -78,7 +77,9 @@ async def blink(canvas, row, column, symbol='*', offset=1):
             offset = 0
 
 
-async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
+async def fire(
+    canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
+):
     """Display animation of gun shot, direction and speed can be specified."""
 
     row, column = start_row, start_column
@@ -111,18 +112,20 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 def load_frame_from_file(filename):
     with open(filename, 'r') as fd:
         return fd.read()
-    
+
 
 def get_frame_size(text):
     """Calculate size of multiline text fragment, return pair — number of rows and colums."""
-    
+
     lines = text.splitlines()
     rows = len(lines)
     columns = max([len(line) for line in lines])
     return rows, columns
 
 
-async def animate_spaceship(canvas, start_row, start_column, frames, coroutines):
+async def animate_spaceship(
+    canvas, start_row, start_column, frames, coroutines
+):
     frames_gen = cycle(frames)
     row, column = start_row, start_column
     max_height, max_width = canvas.getmaxyx()
@@ -133,7 +136,9 @@ async def animate_spaceship(canvas, start_row, start_column, frames, coroutines)
         number_of_rows, number_of_columns = get_frame_size(current_frame)
 
         vertical, horizon, space_pressed = read_controls(canvas)
-        row_speed, column_speed = update_speed(row_speed, column_speed, vertical, horizon)
+        row_speed, column_speed = update_speed(
+            row_speed, column_speed, vertical, horizon
+        )
 
         border_space = 1
 
@@ -142,12 +147,20 @@ async def animate_spaceship(canvas, start_row, start_column, frames, coroutines)
         reached_right = column + number_of_columns == max_width - border_space
         reached_left = column <= 1
 
-        if (vertical == 1 and not reached_bottom or
-                vertical == -1 and not reached_top):
+        if (
+            vertical == 1
+            and not reached_bottom
+            or vertical == -1
+            and not reached_top
+        ):
             row += vertical + row_speed
 
-        if (horizon == 1 and not reached_right or
-                horizon == -1 and not reached_left):
+        if (
+            horizon == 1
+            and not reached_right
+            or horizon == -1
+            and not reached_left
+        ):
             column += horizon + column_speed
 
         if space_pressed:
@@ -188,20 +201,11 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
         frames['trash_xl'],
     ]
     while True:
-        new_coroutine = fly_garbage(canvas, randint(0, width), choice(garbage_frames))
+        new_coroutine = fly_garbage(
+            canvas, randint(0, width), choice(garbage_frames)
+        )
         coroutines.append(new_coroutine)
         await go_to_sleep(1)
-
-
-def get_obstacle_coroutine(canvas):
-    obstacles = [
-        Obstacle(10, 10),  # первое препятствие
-        Obstacle(10, 12, uid='второе препятствие с названием'),
-        Obstacle(15, 15, uid='третье большое препятствие'),
-    ]
-    coroutine = show_obstacles(canvas, obstacles)
-
-    return coroutine
 
 
 async def print_info(canvas):
@@ -224,7 +228,7 @@ def draw(canvas):
             randint(1, height - 2),
             randint(1, width - 2),
             choice(symbols),
-            randint(0, 3)
+            randint(0, 3),
         )
         for _ in range(1)
     ]
@@ -238,21 +242,14 @@ def draw(canvas):
         frames['rocket_frame_2'],
     )
 
-    rocket_coro = animate_spaceship(canvas, 1, 150, rocket_frames, coroutines)
-    coroutines.append(rocket_coro)
-
-    garbage_coroutines = get_garbage_coroutines(canvas, frames)
-    coroutines += coroutines + garbage_coroutines
-
-    filling_garbage_coroutine = fill_orbit_with_garbage(canvas, frames, coroutines)
-    coroutines.append(filling_garbage_coroutine)
-
-    obstacle = get_obstacle_coroutine(canvas)
-    coroutines.append(obstacle)
-
-    coroutines.append(print_info(canvas))
-
-    coroutines.append(show_obstacles(canvas, obstacles))
+    coroutines.extend(
+        [
+            animate_spaceship(canvas, 1, 150, rocket_frames, coroutines),
+            fill_orbit_with_garbage(canvas, frames, coroutines),
+            show_obstacles(canvas, obstacles),
+            print_info(canvas),
+        ]
+    )
 
     while True:
         for coroutine in coroutines.copy():
