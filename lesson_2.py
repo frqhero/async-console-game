@@ -120,6 +120,20 @@ def load_frame_from_file(filename):
         return fd.read()
 
 
+def has_collided(row, column, obj_size_rows, obj_size_columns):
+    for obstacle in obstacles:
+        if obstacle.has_collision(row, column, obj_size_rows, obj_size_columns):
+            return True
+
+
+async def show_gameover(canvas):
+    frame = load_frame_from_file('frames/game_over.txt')
+    max_height, max_width = canvas.getmaxyx()
+    while True:
+        draw_frame(canvas, max_height / 2, max_width / 2, frame)
+        await go_to_sleep(0.1)
+
+
 async def animate_spaceship(
     canvas, start_row, start_column, frames, coroutines
 ):
@@ -130,7 +144,7 @@ async def animate_spaceship(
 
     while True:
         current_frame = next(frames_gen)
-        number_of_rows, number_of_columns = get_frame_size(current_frame)
+        obj_size_rows, obj_size_columns = get_frame_size(current_frame)
 
         vertical, horizon, space_pressed = read_controls(canvas)
         row_speed, column_speed = update_speed(
@@ -139,9 +153,9 @@ async def animate_spaceship(
 
         border_space = 1
 
-        reached_bottom = row + number_of_rows >= max_height - border_space
+        reached_bottom = row + obj_size_rows >= max_height - border_space
         reached_top = row <= 1
-        reached_right = column + number_of_columns == max_width - border_space
+        reached_right = column + obj_size_columns == max_width - border_space
         reached_left = column <= 1
 
         if (
@@ -163,6 +177,10 @@ async def animate_spaceship(
         if space_pressed:
             fire_coro = fire(canvas, row, column + 1)
             coroutines.append(fire_coro)
+
+        if has_collided(row, column, obj_size_rows, obj_size_columns):
+            coroutines.append(show_gameover(canvas))
+            return
 
         draw_frame(canvas, row, column, current_frame)
         await go_to_sleep(0.1)
