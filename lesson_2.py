@@ -6,6 +6,7 @@ from itertools import cycle
 from random import choice, randint
 
 from curses_tools import draw_frame, get_frame_size
+from game_scenario import PHRASES, get_garbage_delay_tics
 from obstacles import obstacles, show_obstacles, obstacles_in_last_collisions
 from physics import update_speed
 from space_garbage import fly_garbage
@@ -15,6 +16,10 @@ LEFT_KEY_CODE = 260
 RIGHT_KEY_CODE = 261
 UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
+
+
+year = 2010
+game_speed = 15
 
 
 def read_controls(canvas):
@@ -174,7 +179,7 @@ async def animate_spaceship(
         ):
             column += horizon + column_speed
 
-        if space_pressed:
+        if space_pressed and year >= 2020:
             fire_coro = fire(canvas, row, column + 1)
             coroutines.append(fire_coro)
 
@@ -216,6 +221,14 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
         frames['trash_xl'],
     ]
     while True:
+        garbage_delay = get_garbage_delay_tics(year)
+
+        if not garbage_delay:
+            await go_to_sleep(0.1)
+            continue
+
+        await go_to_sleep(garbage_delay / 10)
+
         new_coroutine = fly_garbage(
             canvas, randint(0, width), choice(garbage_frames), coroutines
         )
@@ -224,15 +237,21 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
 
 
 async def print_info(canvas):
+    phrase = ''
     while True:
-        canvas.addstr(1, 1, '{}'.format(len(obstacles)))
-        canvas.addstr(1, 4, '{}'.format(len(obstacles_in_last_collisions)))
+        der = canvas.derwin(1, 1)
+        der.addstr(0, 0, '{}'.format(len(obstacles)))
+        der.addstr(1, 0, '{}'.format(len(obstacles_in_last_collisions)))
+        der.addstr(2, 0, '{}'.format(year))
+        phrase = PHRASES.get(year) or phrase
+        der.addstr(3, 0, '{}'.format(' ' * 40))
+        der.addstr(3, 0, '{}'.format(phrase))
         await go_to_sleep(0.1)
 
 
 def draw(canvas):
     curses.curs_set(False)
-    canvas.border()
+    
     canvas.nodelay(True)
 
     height, width = canvas.getmaxyx()
@@ -262,12 +281,14 @@ def draw(canvas):
         [
             animate_spaceship(canvas, 1, 150, rocket_frames, coroutines),
             fill_orbit_with_garbage(canvas, frames, coroutines),
-            show_obstacles(canvas, obstacles),
+            # show_obstacles(canvas, obstacles),
             print_info(canvas),
         ]
     )
 
     while True:
+        canvas.border()
+
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
@@ -276,6 +297,11 @@ def draw(canvas):
         if len(coroutines) == 0:
             break
         canvas.refresh()
+
+        global year, game_speed
+        game_speed += 1
+        if not game_speed % 15:
+            year += 1
         time.sleep(0.1)
 
 
