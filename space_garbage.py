@@ -1,12 +1,12 @@
 import asyncio
 import uuid
 
-from curses_tools import draw_frame
-from main import get_frame_size
+from curses_tools import draw_frame, get_frame_size
+from explosion import explode
 from obstacles import Obstacle, obstacles, obstacles_in_last_collisions
 
 
-async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+async def fly_garbage(canvas, column, garbage_frame, coroutines, speed=0.5):
     """Animate garbage, flying from top to bottom. Column position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -24,8 +24,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     while row < rows_number:
         if obstacle in obstacles_in_last_collisions:
             obstacles_in_last_collisions.remove(obstacle)
+            coroutines.append(explode(canvas, row, column))
             break
-        
+
         obstacle.row = row
         draw_frame(canvas, row, column, garbage_frame)
         await asyncio.sleep(0)

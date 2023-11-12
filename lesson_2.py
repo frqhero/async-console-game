@@ -5,7 +5,7 @@ import time
 from itertools import cycle
 from random import choice, randint
 
-from curses_tools import draw_frame
+from curses_tools import draw_frame, get_frame_size
 from obstacles import obstacles, show_obstacles, obstacles_in_last_collisions
 from physics import update_speed
 from space_garbage import fly_garbage
@@ -104,7 +104,8 @@ async def fire(
     while 0 < row < max_row and 0 < column < max_column:
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
-                obstacles_in_last_collisions.append(obstacle)
+                if obstacle not in obstacles_in_last_collisions:
+                    obstacles_in_last_collisions.append(obstacle)
                 return
 
         canvas.addstr(round(row), round(column), symbol)
@@ -117,15 +118,6 @@ async def fire(
 def load_frame_from_file(filename):
     with open(filename, 'r') as fd:
         return fd.read()
-
-
-def get_frame_size(text):
-    """Calculate size of multiline text fragment, return pair — number of rows and colums."""
-
-    lines = text.splitlines()
-    rows = len(lines)
-    columns = max([len(line) for line in lines])
-    return rows, columns
 
 
 async def animate_spaceship(
@@ -207,7 +199,7 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
     ]
     while True:
         new_coroutine = fly_garbage(
-            canvas, randint(0, width), choice(garbage_frames)
+            canvas, randint(0, width), choice(garbage_frames), coroutines
         )
         coroutines.append(new_coroutine)
         await go_to_sleep(1)
@@ -216,7 +208,7 @@ async def fill_orbit_with_garbage(canvas, frames, coroutines):
 async def print_info(canvas):
     while True:
         canvas.addstr(1, 1, '{}'.format(len(obstacles)))
-        canvas.addstr(1, 3, '{}'.format(len(obstacles_in_last_collisions)))
+        canvas.addstr(1, 4, '{}'.format(len(obstacles_in_last_collisions)))
         await go_to_sleep(0.1)
 
 
