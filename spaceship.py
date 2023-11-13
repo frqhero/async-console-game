@@ -7,7 +7,7 @@ from random import choice, randint
 
 from curses_tools import draw_frame, get_frame_size
 from game_scenario import PHRASES, get_garbage_delay_tics
-from obstacles import obstacles, show_obstacles, obstacles_in_last_collisions
+from obstacles import obstacles, obstacles_in_last_collisions
 from physics import update_speed
 from space_garbage import fly_garbage
 
@@ -127,7 +127,9 @@ def load_frame_from_file(filename):
 
 def has_collided(row, column, obj_size_rows, obj_size_columns):
     for obstacle in obstacles:
-        if obstacle.has_collision(row, column, obj_size_rows, obj_size_columns):
+        if obstacle.has_collision(
+            row, column, obj_size_rows, obj_size_columns
+        ):
             return True
 
 
@@ -192,17 +194,11 @@ async def animate_spaceship(
         draw_frame(canvas, row, column, current_frame, negative=True)
 
 
-def get_frames():
-    return {
-        'duck': load_frame_from_file('frames/duck.txt'),
-        'hubble': load_frame_from_file('frames/hubble.txt'),
-        'lamp': load_frame_from_file('frames/lamp.txt'),
-        's': load_frame_from_file('frames/s.txt'),
-        'trash_large': load_frame_from_file('frames/trash_large.txt'),
-        'trash_xl': load_frame_from_file('frames/trash_xl.txt'),
-        'rocket_frame_1': load_frame_from_file('frames/rocket_frame_1.txt'),
-        'rocket_frame_2': load_frame_from_file('frames/rocket_frame_2.txt'),
-    }
+def get_frames_by_name(frame_names):
+    return [
+        load_frame_from_file(f'frames/{frame_name}.txt')
+        for frame_name in frame_names
+    ]
 
 
 def get_garbage_coroutines(canvas, frames):
@@ -213,13 +209,8 @@ def get_garbage_coroutines(canvas, frames):
     ]
 
 
-async def fill_orbit_with_garbage(canvas, frames, coroutines):
+async def fill_orbit_with_garbage(canvas, garbage_frames, coroutines):
     _, width = canvas.getmaxyx()
-    garbage_frames = [
-        frames['s'],
-        frames['trash_large'],
-        frames['trash_xl'],
-    ]
     while True:
         garbage_delay = get_garbage_delay_tics(year)
 
@@ -251,7 +242,7 @@ async def print_info(canvas):
 
 def draw(canvas):
     curses.curs_set(False)
-    
+
     canvas.nodelay(True)
 
     height, width = canvas.getmaxyx()
@@ -268,20 +259,27 @@ def draw(canvas):
         for _ in range(1)
     ]
 
-    frames = get_frames()
+    frames = get_frames_by_name(
+        [
+            's',
+            'trash_large',
+            'trash_xl',
+        ]
+    )
 
-    rocket_frames = (
-        frames['rocket_frame_1'],
-        frames['rocket_frame_1'],
-        frames['rocket_frame_2'],
-        frames['rocket_frame_2'],
+    rocket_frames = get_frames_by_name(
+        [
+            'rocket_frame_1',
+            'rocket_frame_1',
+            'rocket_frame_2',
+            'rocket_frame_2',
+        ]
     )
 
     coroutines.extend(
         [
             animate_spaceship(canvas, 1, 150, rocket_frames, coroutines),
             fill_orbit_with_garbage(canvas, frames, coroutines),
-            # show_obstacles(canvas, obstacles),
             print_info(canvas),
         ]
     )
